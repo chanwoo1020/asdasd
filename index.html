@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>잔반 제로 에코 챌린지 - 팀 열공</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN for Admin Data Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #16a34a 0%, #0d9488 100%); }
+        .badge-glow { box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header Navigation -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('student')">
+                <div class="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center text-white text-xl font-bold shadow-md">
+                    🌱
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-slate-800 leading-tight">잔반 제로 에코 챌린지</h1>
+                    <p class="text-xs text-emerald-600 font-semibold">팀 열공 | SDGs 13 기후변화대응</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Tabs -->
+            <nav class="flex space-x-1 sm:space-x-2 bg-slate-100 p-1 rounded-xl">
+                <button id="nav-student" onclick="switchTab('student')" class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all bg-white text-emerald-700 shadow-sm">
+                    <i class="fa-solid fa-utensils mr-1"></i> 학생 모드
+                </button>
+                <button id="nav-admin" onclick="switchTab('admin')" class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900">
+                    <i class="fa-solid fa-chart-line mr-1"></i> 영양사/관리자
+                </button>
+                <button id="nav-sdg" onclick="switchTab('sdg')" class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900">
+                    <i class="fa-solid fa-earth-americas mr-1"></i> 프로젝트 정의서
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area Container -->
+    <main class="max-w-6xl mx-auto px-4 py-6 flex-grow w-full">
+
+        <!-- ==================== TAB 1: 학생 모드 ==================== -->
+        <section id="tab-student" class="space-y-6">
+            <!-- Hero Banner -->
+            <div class="gradient-bg rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                <div class="relative z-10 max-w-xl">
+                    <span class="bg-white/20 text-xs px-3 py-1 rounded-full font-medium inline-block mb-2">오늘의 급식 챌린지</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold mb-2">맛있게 다 먹고 탄소를 줄여요!</h2>
+                    <p class="text-sm opacity-90 mb-4">식판 사진을 인증하고 잔반을 줄이면 기후 변화를 막는 지구 수호 뱃지를 획득할 수 있습니다.</p>
+                    <div class="flex items-center space-x-4 bg-white/10 p-3 rounded-xl backdrop-blur-sm">
+                        <div class="text-center border-r border-white/20 pr-4">
+                            <p class="text-xs opacity-75">내 누적 적립 탄소</p>
+                            <p class="text-xl font-bold" id="user-total-co2">0 g</p>
+                        </div>
+                        <div class="text-center border-r border-white/20 pr-4">
+                            <p class="text-xs opacity-75">잔반 제로 성공</p>
+                            <p class="text-xl font-bold" id="user-success-count">0 회</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-xs opacity-75">현재 등급</p>
+                            <p class="text-xl font-bold" id="user-rank-title">그린 비기너 🌿</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload & Scan Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Meal Image Upload Card -->
+                <div class="md:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="font-bold text-slate-800 text-lg flex items-center">
+                        <i class="fa-solid fa-camera text-emerald-500 mr-2"></i> 식판 사진 촬영 및 잔반 확인
+                    </h3>
+                    
+                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-emerald-400 transition cursor-pointer bg-slate-50 relative" id="upload-zone">
+                        <input type="file" id="image-input" accept="image/*" class="hidden" onchange="previewImage(event)">
+                        
+                        <div id="upload-prompt" class="space-y-3">
+                            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-700">식판 사진을 올리거나 카메라로 찍어주세요</p>
+                                <p class="text-xs text-slate-400 mt-1">AI가 이미지 잔반 비율을 자동 분석합니다.</p>
+                            </div>
+                            <div class="flex justify-center space-x-2 pt-2">
+                                <button onclick="document.getElementById('image-input').click()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow transition">
+                                    사진 파일 선택
+                                </button>
+                                <button onclick="useSampleImage()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold transition">
+                                    샘플 사진 사용해보기
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Image Preview -->
+                        <div id="image-preview-container" class="hidden relative">
+                            <img id="image-preview" src="" alt="식판 사진 미리보기" class="max-h-64 mx-auto rounded-lg shadow-sm object-cover">
+                            <button onclick="resetImage()" class="absolute top-2 right-2 bg-slate-800/70 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-900 transition">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Leftover Selector Form -->
+                    <div class="space-y-3 pt-2">
+                        <label class="block text-sm font-semibold text-slate-700">식판의 잔반 상태를 선택하세요:</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button type="button" onclick="selectWasteLevel(0, this)" class="waste-btn border-2 border-slate-200 p-3 rounded-xl hover:border-emerald-500 text-center transition flex flex-col items-center">
+                                <span class="text-2xl mb-1">✨</span>
+                                <span class="font-bold text-sm text-slate-800">잔반 없음 (0%)</span>
+                                <span class="text-xs text-emerald-600 mt-1">+500g CO₂ 절감</span>
+                            </button>
+                            <button type="button" onclick="selectWasteLevel(30, this)" class="waste-btn border-2 border-slate-200 p-3 rounded-xl hover:border-emerald-500 text-center transition flex flex-col items-center">
+                                <span class="text-2xl mb-1">🥦</span>
+                                <span class="font-bold text-sm text-slate-800">조금 남음 (30%)</span>
+                                <span class="text-xs text-amber-600 mt-1">+200g CO₂ 절감</span>
+                            </button>
+                            <button type="button" onclick="selectWasteLevel(70, this)" class="waste-btn border-2 border-slate-200 p-3 rounded-xl hover:border-emerald-500 text-center transition flex flex-col items-center">
+                                <span class="text-2xl mb-1">🍲</span>
+                                <span class="font-bold text-sm text-slate-800">절반 이상 (70%)</span>
+                                <span class="text-xs text-rose-500 mt-1">다음엔 다 먹어봐요!</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button id="submit-btn" onclick="submitMealRecord()" disabled class="w-full py-3 bg-slate-300 text-slate-500 font-bold rounded-xl transition cursor-not-allowed">
+                        식판 인증 및 탄소 절감 등록하기
+                    </button>
+                </div>
+
+                <!-- Badges and Leaderboard -->
+                <div class="space-y-6">
+                    <!-- Badges Earned -->
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-slate-800 text-base mb-3 flex items-center">
+                            <i class="fa-solid fa-award text-amber-500 mr-2"></i> 나의 획득 뱃지
+                        </h3>
+                        <div class="grid grid-cols-3 gap-3" id="badge-container">
+                            <!-- Badges dynamically rendered -->
+                        </div>
+                    </div>
+
+                    <!-- School Ranking -->
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-slate-800 text-base mb-3 flex items-center justify-between">
+                            <span><i class="fa-solid fa-trophy text-amber-500 mr-2"></i> 학급 탄소 절감 랭킹</span>
+                            <span class="text-xs text-slate-400 font-normal">이번 주</span>
+                        </h3>
+                        <div class="space-y-3" id="leaderboard-list">
+                            <!-- Leaderboard item template -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 2: 영양사/관리자 대시보드 ==================== -->
+        <section id="tab-admin" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-800">급식실 기후 대응 종합 대시보드</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">학교 전체 급식 잔반 및 탄소 배출량 관리 통계</p>
+                </div>
+                <div class="mt-3 sm:mt-0 flex space-x-2">
+                    <button onclick="generateSampleData()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition">
+                        <i class="fa-solid fa-arrows-rotate mr-1"></i> 샘플 데이터 생성
+                    </button>
+                    <button onclick="clearAllRecords()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition">
+                        초기화
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dashboard Stats Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-medium text-slate-400">오늘 줄인 잔반량</p>
+                            <h3 class="text-2xl font-black text-slate-800 mt-1" id="dash-today-waste">0.0 kg</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-weight-hanging"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-emerald-600 mt-2 font-semibold">전일 대비 약 <span id="dash-waste-diff">0</span>% 감소</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-medium text-slate-400">누적 탄소 절감량</p>
+                            <h3 class="text-2xl font-black text-emerald-600 mt-1" id="dash-total-co2">0.0 kg</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-leaf"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">온실가스 배출 예방 효과</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-medium text-slate-400">소나무 심기 환산 효과</p>
+                            <h3 class="text-2xl font-black text-emerald-600 mt-1" id="dash-tree-count">0 구조</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-tree"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">30년생 소나무 연간 흡수량 기준</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-medium text-slate-400">학생 참여율</p>
+                            <h3 class="text-2xl font-black text-indigo-600 mt-1" id="dash-participation">84%</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-indigo-600 mt-2 font-semibold">전체 학생 450명 중 참여 중</p>
+                </div>
+            </div>
+
+            <!-- Analytics Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Trend Chart -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                    <h3 class="font-bold text-slate-800 text-base flex items-center">
+                        <i class="fa-solid fa-chart-line text-emerald-500 mr-2"></i> 일별 잔반 발생 및 탄소 절감 추이
+                    </h3>
+                    <div class="h-64 w-full">
+                        <canvas id="wasteTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Menu Stats Chart -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                    <h3 class="font-bold text-slate-800 text-base flex items-center">
+                        <i class="fa-solid fa-chart-pie text-emerald-500 mr-2"></i> 최근 식단 메뉴별 평균 잔반율 (%)
+                    </h3>
+                    <div class="h-64 w-full">
+                        <canvas id="menuWasteChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nutritionist Recommendations Box -->
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex items-start space-x-4">
+                <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 text-xl font-bold">
+                    💡
+                </div>
+                <div>
+                    <h4 class="font-bold text-emerald-900 text-sm">AI 기반 식단 조절 인사이트 (영양 선생님 참고용)</h4>
+                    <p class="text-xs text-emerald-800 mt-1 leading-relaxed">
+                        최근 데이터 분석 결과, **나물류 및 시래기국** 메뉴 발주 시 잔반 발생 비율이 45%로 높게 측정됩니다. 
+                        조리 방식 변경이나 선호도가 높은 메뉴와의 조합을 통해 약 **12.4kg의 탄소 배출량**을 추가 절감할 수 있습니다.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 3: 프로젝트 정의서 및 윤리 안내 ==================== -->
+        <section id="tab-sdg" class="space-y-6 hidden">
+            <!-- Problem Definition Document Card -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+                <div class="border-b border-slate-100 pb-4 flex justify-between items-center">
+                    <div>
+                        <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">SDGs 문제 정의서</span>
+                        <h2 class="text-2xl font-black text-slate-800">팀 '열공'의 기후 변화 대응 프로젝트</h2>
+                    </div>
+                    <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-full">SDGs 13번 Climate Action</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Item 1 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
+                        <div class="flex items-center space-x-2 text-emerald-700 font-bold text-sm">
+                            <span class="w-6 h-6 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center text-xs">1</span>
+                            <span>팀명 / 선택한 SDGs 목표</span>
+                        </div>
+                        <p class="text-sm text-slate-700 font-medium pl-8">
+                            • <strong>팀명:</strong> 열공<br>
+                            • <strong>선택 목표:</strong> SDGs 13번 (기후 변화 대응 - Climate Action)
+                        </p>
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
+                        <div class="flex items-center space-x-2 text-emerald-700 font-bold text-sm">
+                            <span class="w-6 h-6 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center text-xs">2</span>
+                            <span>우리 학교·동네의 관련 문제 상황</span>
+                        </div>
+                        <p class="text-sm text-slate-700 leading-relaxed pl-8">
+                            학교 급식실에서 매일 대량의 잔반이 발생하여 불필요한 온실가스와 음식물 쓰레기 처리 비용이 발생하고 있음. 학생들이 남기는 음식물의 탄소 배출량을 직관적으로 인지하지 못함.
+                        </p>
+                    </div>
+
+                    <!-- Item 3 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
+                        <div class="flex items-center space-x-2 text-emerald-700 font-bold text-sm">
+                            <span class="w-6 h-6 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center text-xs">3</span>
+                            <span>누가, 어떻게 불편을 겪나요?</span>
+                        </div>
+                        <div class="text-sm text-slate-700 space-y-1 pl-8">
+                            <p>• <strong>학생들:</strong> 잔반의 기후 악영향을 인지하기 어려워 실천 동기가 부족함.</p>
+                            <p>• <strong>영양 선생님:</strong> 수기 잔반 측정의 한계로 효율적 식단 수요 예측에 어려움을 겪음.</p>
+                        </div>
+                    </div>
+
+                    <!-- Item 4 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
+                        <div class="flex items-center space-x-2 text-emerald-700 font-bold text-sm">
+                            <span class="w-6 h-6 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center text-xs">4</span>
+                            <span>해결되면 어떤 변화가?</span>
+                        </div>
+                        <div class="text-sm text-slate-700 space-y-1 pl-8">
+                            <p>• AI 및 웹앱 기반 식판 인증으로 탄소 절감량을 확인하고 게임처럼 재미있게 참여함.</p>
+                            <p>• 누적 잔반 데이터로 accurate 한 식단 수요 예측이 가능해져 실질적 온실가스 감축 달성.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ethics & Privacy Guidance Card -->
+            <div class="bg-amber-50 rounded-2xl p-6 border border-amber-200 space-y-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-amber-900 text-base">디지털 기술 윤리 및 개인정보 보호 안내</h3>
+                        <p class="text-xs text-amber-700">안전하고 정직한 웹앱 서비스 운영을 위한 윤리 원칙</p>
+                    </div>
+                </div>
+                <div class="text-xs text-amber-900 space-y-2 leading-relaxed">
+                    <p>1. <strong>개인식별정보 미수집:</strong> 본 앱은 학생 개인의 얼굴이나 이름을 서버에 저장하지 않으며, 업로드한 식판 이미지는 디바이스 상에서만 처리됩니다.</p>
+                    <p>2. <strong>로컬 브라우저 데이터 보관:</strong> 모든 사용자 활동 및 랭킹 데이터는 사용자의 웹 브라우저 (LocalStorage)에 안전하게 보관됩니다.</p>
+                    <p>3. <strong>정직한 데이터 입력:</strong> 허위 식판 사진 인증을 방지하기 위해 AI 유효성 검사 규칙을 준수합니다.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center space-y-2">
+            <p class="text-xs text-slate-500">SDGs 13번 기후 변화 대응 프로젝트 | 팀명: <strong>열공</strong></p>
+            <p class="text-xs text-slate-400">본 프로젝트는 고등학생 기후 변화 대응 디지털 솔루션 구현 예시입니다.</p>
+        </div>
+    </footer>
+
+    <!-- Notification Toast Modal -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transition-all duration-300 transform translate-y-20 opacity-0 z-50">
+        <span id="toast-icon" class="text-emerald-400 text-lg">🌱</span>
+        <span id="toast-message" class="text-sm font-medium">메시지 내용</span>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Default Mock State Data
+        let appData = {
+            totalCo2Saved: 1250, // grams
+            successCount: 3,
+            wasteSelected: null,
+            uploadedImage: null
+        };
+
+        let trendChart = null;
+        let menuChart = null;
+
+        // Initialize Application on Page Load
+        window.onload = function () {
+            loadLocalStorageData();
+            updateStudentUI();
+            renderBadges();
+            renderLeaderboard();
+            initCharts();
+        };
+
+        // Navigation Tab Switching Logic
+        function switchTab(tabName) {
+            const tabs = ['student', 'admin', 'sdg'];
+            tabs.forEach(tab => {
+                const tabElem = document.getElementById(`tab-${tab}`);
+                const navBtn = document.getElementById(`nav-${tab}`);
+                
+                if (tab === tabName) {
+                    tabElem.classList.remove('hidden');
+                    navBtn.classList.add('bg-white', 'text-emerald-700', 'shadow-sm');
+                    navBtn.classList.remove('text-slate-600');
+                } else {
+                    tabElem.classList.add('hidden');
+                    navBtn.classList.remove('bg-white', 'text-emerald-700', 'shadow-sm');
+                    navBtn.classList.add('text-slate-600');
+                }
+            });
+
+            if (tabName === 'admin') {
+                updateAdminDashboard();
+            }
+        }
+
+        // Image Selection / Preview Handlers
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    displayPreview(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function useSampleImage() {
+            // Placeholder Image with clean meal simulation
+            const sampleUrl = "https://placehold.co/600x400/22c55e/ffffff?text=Clean+Meal+Plate+Sample";
+            displayPreview(sampleUrl);
+        }
+
+        function displayPreview(src) {
+            appData.uploadedImage = src;
+            document.getElementById('image-preview').src = src;
+            document.getElementById('upload-prompt').classList.add('hidden');
+            document.getElementById('image-preview-container').classList.remove('hidden');
+            checkSubmitStatus();
+        }
+
+        function resetImage() {
+            appData.uploadedImage = null;
+            document.getElementById('image-input').value = "";
+            document.getElementById('upload-prompt').classList.remove('hidden');
+            document.getElementById('image-preview-container').classList.add('hidden');
+            checkSubmitStatus();
+        }
+
+        // Leftover Level Selection
+        function selectWasteLevel(percentage, btnElement) {
+            appData.wasteSelected = percentage;
+            const buttons = document.querySelectorAll('.waste-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('border-emerald-500', 'bg-emerald-50');
+            });
+            btnElement.classList.add('border-emerald-500', 'bg-emerald-50');
+            checkSubmitStatus();
+        }
+
+        function checkSubmitStatus() {
+            const submitBtn = document.getElementById('submit-btn');
+            if (appData.wasteSelected !== null && appData.uploadedImage !== null) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('bg-slate-300', 'text-slate-500', 'cursor-not-allowed');
+                submitBtn.classList.add('gradient-bg', 'text-white', 'hover:opacity-90', 'shadow-md');
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('bg-slate-300', 'text-slate-500', 'cursor-not-allowed');
+                submitBtn.classList.remove('gradient-bg', 'text-white', 'hover:opacity-90', 'shadow-md');
+            }
+        }
+
+        // Submit Meal Logic
+        function submitMealRecord() {
+            let co2Gained = 0;
+            if (appData.wasteSelected === 0) {
+                co2Gained = 500;
+                appData.successCount += 1;
+                showToast("✨ 잔반 제로 성공! 500g CO₂ 절감!", "🎉");
+            } else if (appData.wasteSelected === 30) {
+                co2Gained = 200;
+                showToast("🥦 30% 남김: 200g CO₂ 절감 완료!", "🌿");
+            } else {
+                co2Gained = 0;
+                showToast("🍲 잔반이 많이 남았어요. 내일 도전해요!", "💪");
+            }
+
+            appData.totalCo2Saved += co2Gained;
+            saveLocalStorageData();
+            updateStudentUI();
+            renderBadges();
+
+            // Reset Form Inputs
+            resetImage();
+            appData.wasteSelected = null;
+            document.querySelectorAll('.waste-btn').forEach(b => b.classList.remove('border-emerald-500', 'bg-emerald-50'));
+            checkSubmitStatus();
+        }
+
+        // Student UI Data Sync
+        function updateStudentUI() {
+            document.getElementById('user-total-co2').innerText = `${appData.totalCo2Saved} g`;
+            document.getElementById('user-success-count').innerText = `${appData.successCount} 회`;
+
+            let rankTitle = "그린 비기너 🌿";
+            if (appData.totalCo2Saved >= 3000) rankTitle = "지구 수호 마스터 🌍";
+            else if (appData.totalCo2Saved >= 1500) rankTitle = "에코 가디언 🛡️";
+            
+            document.getElementById('user-rank-title').innerText = rankTitle;
+        }
+
+        // Dynamic Badge Rendering
+        function renderBadges() {
+            const container = document.getElementById('badge-container');
+            const badges = [
+                { title: '첫 잔반 제로', desc: '1회 성공', icon: '🌱', unlocked: appData.successCount >= 1 },
+                { title: '탄소 1kg 절감', desc: '1000g 달성', icon: '🌿', unlocked: appData.totalCo2Saved >= 1000 },
+                { title: '3연속 클린', desc: '3회 성공', icon: '⭐', unlocked: appData.successCount >= 3 },
+                { title: '지구 수호자', desc: '3000g 달성', icon: '🌍', unlocked: appData.totalCo2Saved >= 3000 },
+                { title: '급식왕 팀원', desc: '열공 인증', icon: '🔥', unlocked: true },
+                { title: '에코 히어로', desc: '5회 성공', icon: '👑', unlocked: appData.successCount >= 5 },
+            ];
+
+            container.innerHTML = badges.map(b => `
+                <div class="p-3 rounded-xl border text-center transition ${b.unlocked ? 'border-emerald-300 bg-emerald-50/50 badge-glow' : 'border-slate-100 bg-slate-50 opacity-40'}">
+                    <div class="text-2xl mb-1">${b.icon}</div>
+                    <div class="font-bold text-xs text-slate-800">${b.title}</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">${b.desc}</div>
+                </div>
+            `).join('');
+        }
+
+        // Dynamic Leaderboard Rendering
+        function renderLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            const ranks = [
+                { rank: 1, name: '2학년 3반', co2: '14.2 kg', cls: 'bg-amber-100 text-amber-800 font-bold' },
+                { rank: 2, name: '1학년 5반 (우리반)', co2: `${(appData.totalCo2Saved / 1000 + 10.5).toFixed(1)} kg`, cls: 'bg-emerald-100 text-emerald-800 font-bold' },
+                { rank: 3, name: '3학년 1반', co2: '9.8 kg', cls: 'bg-slate-100 text-slate-700' },
+                { rank: 4, name: '2학년 1반', co2: '8.4 kg', cls: 'bg-slate-100 text-slate-700' }
+            ];
+
+            list.innerHTML = ranks.map(r => `
+                <div class="flex items-center justify-between p-2.5 rounded-xl text-xs ${r.cls}">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-5 h-5 rounded-full bg-white flex items-center justify-center font-bold text-[10px] shadow-sm">${r.rank}</span>
+                        <span>${r.name}</span>
+                    </div>
+                    <span>${r.co2} 절감</span>
+                </div>
+            `).join('');
+        }
+
+        // Admin Dashboard Update
+        function updateAdminDashboard() {
+            const totalKg = (appData.totalCo2Saved / 1000 + 45.2).toFixed(1);
+            const todayWasteKg = (12.4).toFixed(1);
+            const treeCount = Math.floor(totalKg / 6.6); // ~6.6kg CO2 absorbed per tree per year
+
+            document.getElementById('dash-today-waste').innerText = `${todayWasteKg} kg`;
+            document.getElementById('dash-total-co2').innerText = `${totalKg} kg`;
+            document.getElementById('dash-tree-count').innerText = `${treeCount} 그루`;
+            document.getElementById('dash-waste-diff').innerText = '18.5';
+        }
+
+        // Chart.js Implementation
+        function initCharts() {
+            // Trend Line Chart
+            const ctxTrend = document.getElementById('wasteTrendChart').getContext('2d');
+            trendChart = new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: ['월', '화', '수', '목', '금 (오늘)'],
+                    datasets: [
+                        {
+                            label: '일별 잔반량 (kg)',
+                            data: [28.5, 24.0, 19.2, 15.8, 12.4],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: '탄소 절감량 (kg CO₂)',
+                            data: [10.2, 14.5, 21.0, 26.4, 32.8],
+                            borderColor: '#16a34a',
+                            backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            // Menu Bar Chart
+            const ctxMenu = document.getElementById('menuWasteChart').getContext('2d');
+            menuChart = new Chart(ctxMenu, {
+                type: 'bar',
+                data: {
+                    labels: ['제육볶음', '돈까스', '비빔밥', '시래기국', '나물무침'],
+                    datasets: [{
+                        label: '평균 잔반 비율 (%)',
+                        data: [8, 12, 18, 42, 55],
+                        backgroundColor: [
+                            '#22c55e', '#22c55e', '#f59e0b', '#ef4444', '#ef4444'
+                        ],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, max: 100 } }
+                }
+            });
+        }
+
+        // Demo Data Generation Helper
+        function generateSampleData() {
+            appData.totalCo2Saved += 1500;
+            appData.successCount += 2;
+            saveLocalStorageData();
+            updateStudentUI();
+            renderBadges();
+            updateAdminDashboard();
+            showToast("시뮬레이션 데이터가 새로고침되었습니다!", "📊");
+        }
+
+        function clearAllRecords() {
+            localStorage.removeItem('yeolgong_eco_app');
+            appData = { totalCo2Saved: 0, successCount: 0, wasteSelected: null, uploadedImage: null };
+            updateStudentUI();
+            renderBadges();
+            updateAdminDashboard();
+            showToast("모든 데이터가 초기화되었습니다.", "🧹");
+        }
+
+        // Toast Notification System
+        function showToast(msg, icon = "🌱") {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            document.getElementById('toast-icon').innerText = icon;
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // LocalStorage Helpers
+        function saveLocalStorageData() {
+            localStorage.setItem('yeolgong_eco_app', JSON.stringify({
+                totalCo2Saved: appData.totalCo2Saved,
+                successCount: appData.successCount
+            }));
+        }
+
+        function loadLocalStorageData() {
+            const saved = localStorage.getItem('yeolgong_eco_app');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    appData.totalCo2Saved = parsed.totalCo2Saved || 0;
+                    appData.successCount = parsed.successCount || 0;
+                } catch(e) { console.error(e); }
+            }
+        }
+    </script>
+</body>
+</html>
